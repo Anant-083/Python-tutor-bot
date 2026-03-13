@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Tutor Bot 🐍</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="code-theme">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #ffffff;
+            --bg2: #f6f8fa;
+            --border: #e5e7eb;
+            --text: #1a1a1a;
+            --text2: #57606a;
+            --blue: #0969da;
+            --blue-light: #ddf4ff;
+            --sidebar-bg: #f6f8fa;
+            --chat-user: #f0f7ff;
+            --chat-bot: #ffffff;
+            --input-bg: #ffffff;
+            --shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+
+        .dark {
+            --bg: #0d1117;
+            --bg2: #161b22;
+            --border: #30363d;
+            --text: #e6edf3;
+            --text2: #8b949e;
+            --blue: #58a6ff;
+            --blue-light: #1f3a5c;
+            --sidebar-bg: #161b22;
+            --chat-user: #1c2128;
+            --chat-bot: #161b22;
+            --input-bg: #1c2128;
+            --shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+
+        /* ── Sidebar ── */
+        .sidebar {
+            width: 260px;
+            min-width: 260px;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .sidebar-header {
+            padding: 20px 16px 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-header h1 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar-header p {
+            font-size: 11px;
+            color: var(--text2);
+            margin-top: 4px;
+        }
+
+        .topics-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text2);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 12px 16px 6px;
+        }
+
+        .topics-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 4px 8px;
+        }
+
+        .topics-list::-webkit-scrollbar { width: 4px; }
+        .topics-list::-webkit-scrollbar-track { background: transparent; }
+        .topics-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+        .topic-btn {
+            width: 100%;
+            text-align: left;
+            padding: 8px 12px;
+            background: none;
+            border: none;
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 2px;
+        }
+
+        .topic-btn:hover {
+            background: var(--blue-light);
+            color: var(--blue);
+        }
+
+        .topic-btn .icon { font-size: 14px; }
+
+        .sidebar-footer {
+            padding: 12px 16px;
+            border-top: 1px solid var(--border);
+            font-size: 11px;
+            color: var(--text2);
+        }
+
+        /* ── Main ── */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ── Top bar ── */
+        .topbar {
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg);
+            flex-shrink: 0;
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--text);
+            padding: 4px;
+        }
+
+        .topbar h2 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .icon-btn {
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 12px;
+            color: var(--text2);
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .icon-btn:hover {
+            background: var(--bg2);
+            color: var(--text);
+        }
+
+        /* ── Chat area ── */
+        .chat-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .chat-area::-webkit-scrollbar { width: 6px; }
+        .chat-area::-webkit-scrollbar-track { background: transparent; }
+        .chat-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+        /* Welcome card */
+        .welcome-card {
+            background: linear-gradient(135deg, var(--blue-light), var(--bg2));
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .welcome-card .emoji { font-size: 2.5rem; margin-bottom: 12px; }
+
+        .welcome-card h2 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+
+        .welcome-card p {
+            font-size: 14px;
+            color: var(--text2);
+            line-height: 1.6;
+        }
+
+        .badge-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: center;
+            margin-top: 14px;
+        }
+
+        .badge {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 12px;
+            color: var(--blue);
+            font-weight: 500;
+        }
+
+        /* Messages */
+        .message {
+            display: flex;
+            gap: 10px;
+            max-width: 820px;
+            width: 100%;
+            align-self: flex-start;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .avatar.bot { background: var(--blue-light); }
+        .avatar.user-av { background: #dafbe1; }
+
+        .bubble {
+            background: var(--chat-bot);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-size: 14px;
+            line-height: 1.7;
+            color: var(--text);
+            box-shadow: var(--shadow);
+            max-width: calc(100% - 48px);
+        }
+
+        .message.user .bubble {
+            background: var(--chat-user);
+            border-color: var(--border);
+        }
+
+        /* Markdown inside bubble */
+        .bubble p { margin-bottom: 10px; }
+        .bubble p:last-child { margin-bottom: 0; }
+        .bubble ul, .bubble ol { padding-left: 20px; margin-bottom: 10px; }
+        .bubble li { margin-bottom: 4px; }
+        .bubble strong { color: var(--text); font-weight: 600; }
+        .bubble code {
+            background: var(--bg2);
+            color: #d63384;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .bubble pre {
+            background: var(--bg2) !important;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin: 12px 0;
+            overflow: hidden;
+        }
+
+        .code-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: var(--border);
+            font-size: 11px;
+            color: var(--text2);
+            font-weight: 600;
+        }
+
+        .copy-btn {
+            background: none;
+            border: none;
+            color: var(--text2);
+            cursor: pointer;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            transition: all 0.15s;
+        }
+
+        .copy-btn:hover {
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .bubble pre code {
+            background: none !important;
+            color: var(--text) !important;
+            padding: 12px !important;
+            display: block;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        /* Typing indicator */
+        .typing {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 14px 16px;
+        }
+
+        .typing span {
+            width: 7px;
+            height: 7px;
+            background: var(--text2);
+            border-radius: 50%;
+            animation: bounce 1.2s infinite;
+        }
+
+        .typing span:nth-child(2) { animation-delay: 0.2s; }
+        .typing span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes bounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-6px); }
+        }
+
+        /* ── Input area ── */
+        .input-area {
+            padding: 16px 20px;
+            border-top: 1px solid var(--border);
+            background: var(--bg);
+            flex-shrink: 0;
+        }
+
+        .input-box {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 10px 12px;
+            transition: border-color 0.15s;
+            box-shadow: var(--shadow);
+        }
+
+        .input-box:focus-within {
+            border-color: var(--blue);
+        }
+
+        #user-input {
+            flex: 1;
+            border: none;
+            background: none;
+            outline: none;
+            font-size: 14px;
+            color: var(--text);
+            resize: none;
+            max-height: 120px;
+            line-height: 1.5;
+            font-family: inherit;
+        }
+
+        #user-input::placeholder { color: var(--text2); }
+
+        .send-btn {
+            width: 34px;
+            height: 34px;
+            background: var(--blue);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: opacity 0.15s;
+        }
+
+        .send-btn:hover { opacity: 0.85; }
+        .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        .input-hint {
+            font-size: 11px;
+            color: var(--text2);
+            text-align: center;
+            margin-top: 8px;
+        }
+
+        /* ── Mobile ── */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: -260px;
+                top: 0;
+                z-index: 100;
+                height: 100vh;
+                box-shadow: 4px 0 20px rgba(0,0,0,0.15);
+            }
+
+            .sidebar.open { left: 0; }
+
+            .menu-btn { display: flex; }
+
+            .overlay {
+                display: none;
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,0.4);
+                z-index: 99;
+            }
+
+            .overlay.show { display: block; }
+
+            .chat-area { padding: 12px; }
+            .input-area { padding: 10px 12px; }
+            .topbar { padding: 10px 14px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Overlay for mobile -->
+<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <h1>🐍 Python Tutor Bot</h1>
+        <p>Powered by Groq + LLaMA 3.3</p>
+    </div>
+
+    <div class="topics-label">Quick Topics</div>
+
+    <div class="topics-list">
+        <button class="topic-btn" onclick="askTopic('Variables & Datatypes')"><span class="icon">📦</span> Variables & Datatypes</button>
+        <button class="topic-btn" onclick="askTopic('Lists & Tuples')"><span class="icon">📋</span> Lists & Tuples</button>
+        <button class="topic-btn" onclick="askTopic('Dictionary & Sets')"><span class="icon">📚</span> Dictionary & Sets</button>
+        <button class="topic-btn" onclick="askTopic('For & While Loops')"><span class="icon">🔁</span> For & While Loops</button>
+        <button class="topic-btn" onclick="askTopic('Functions & Lambda')"><span class="icon">⚡</span> Functions & Lambda</button>
+        <button class="topic-btn" onclick="askTopic('Recursion')"><span class="icon">🔄</span> Recursion</button>
+        <button class="topic-btn" onclick="askTopic('OOP & Classes')"><span class="icon">🏗️</span> OOP & Classes</button>
+        <button class="topic-btn" onclick="askTopic('Error Handling')"><span class="icon">🛡️</span> Error Handling</button>
+        <button class="topic-btn" onclick="askTopic('File Handling')"><span class="icon">📁</span> File Handling</button>
+        <button class="topic-btn" onclick="askTopic('List Comprehension')"><span class="icon">✨</span> List Comprehension</button>
+        <button class="topic-btn" onclick="askTopic('Decorators')"><span class="icon">🎨</span> Decorators</button>
+        <button class="topic-btn" onclick="askTopic('Generators')"><span class="icon">⚙️</span> Generators</button>
+        <button class="topic-btn" onclick="askTopic('NumPy Basics')"><span class="icon">🔢</span> NumPy Basics</button>
+        <button class="topic-btn" onclick="askTopic('Pandas Basics')"><span class="icon">🐼</span> Pandas Basics</button>
+        <button class="topic-btn" onclick="askTopic('Python Interview Questions')"><span class="icon">💼</span> Interview Questions</button>
+    </div>
+
+    <div class="sidebar-footer">
+        Made by Anant &nbsp;·&nbsp; github.com/Anant-083
+    </div>
+</div>
+
+<!-- Main -->
+<div class="main">
+    <!-- Topbar -->
+    <div class="topbar">
+        <div class="topbar-left">
+            <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+            <h2>🐍 Python Tutor Bot</h2>
+        </div>
+        <div class="topbar-right">
+            <button class="icon-btn" onclick="toggleTheme()">🌙 Theme</button>
+            <button class="icon-btn" onclick="clearChat()">🗑️ Clear</button>
+        </div>
+    </div>
+
+    <!-- Chat -->
+    <div class="chat-area" id="chat-area">
+        <!-- Welcome card -->
+        <div class="welcome-card">
+            <div class="emoji">🐍</div>
+            <h2>Python Tutor Bot</h2>
+            <p>Your AI-powered Python learning assistant.<br>Ask anything — get instant explanations with code examples!</p>
+            <div class="badge-row">
+                <span class="badge">Variables</span>
+                <span class="badge">Loops</span>
+                <span class="badge">Functions</span>
+                <span class="badge">OOP</span>
+                <span class="badge">NumPy</span>
+                <span class="badge">Pandas</span>
+                <span class="badge">Recursion</span>
+                <span class="badge">Interview Prep</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Input -->
+    <div class="input-area">
+        <div class="input-box">
+            <textarea
+                id="user-input"
+                rows="1"
+                placeholder="Ask any Python question..."
+                onkeydown="handleKey(event)"
+                oninput="autoResize(this)"
+            ></textarea>
+            <button class="send-btn" id="send-btn" onclick="sendMessage()">↑</button>
+        </div>
+        <div class="input-hint">Press Enter to send · Shift+Enter for new line</div>
+    </div>
+</div>
+
+<script>
+    // ── State ──
+    let messages = [];
+    let isDark = false;
+
+    // ── Theme ──
+    function toggleTheme() {
+        isDark = !isDark;
+        document.body.classList.toggle('dark', isDark);
+        const btn = document.querySelector('.icon-btn');
+        btn.textContent = isDark ? '☀️ Theme' : '🌙 Theme';
+
+        // Update code highlight theme
+        const theme = document.getElementById('code-theme');
+        theme.href = isDark
+            ? 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css'
+            : 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css';
+    }
+
+    // ── Sidebar (mobile) ──
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('open');
+        document.getElementById('overlay').classList.toggle('show');
+    }
+
+    // ── Auto resize textarea ──
+    function autoResize(el) {
+        el.style.height = 'auto';
+        el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+    }
+
+    // ── Enter key ──
+    function handleKey(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    }
+
+    // ── Ask topic from sidebar ──
+    function askTopic(topic) {
+        document.getElementById('user-input').value = `Explain ${topic} in Python with a clear code example`;
+        sendMessage();
+        // Close sidebar on mobile
+        document.getElementById('sidebar').classList.remove('open');
+        document.getElementById('overlay').classList.remove('show');
+    }
+
+    // ── Add message to UI ──
+    function addMessage(role, content) {
+        const chatArea = document.getElementById('chat-area');
+
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message ${role === 'user' ? 'user' : 'bot'}`;
+
+        const avatar = document.createElement('div');
+        avatar.className = `avatar ${role === 'user' ? 'user-av' : 'bot'}`;
+        avatar.textContent = role === 'user' ? '👤' : '🐍';
+
+        const bubble = document.createElement('div');
+        bubble.className = 'bubble';
+
+        if (role === 'assistant') {
+            bubble.innerHTML = renderMarkdown(content);
+            // Add copy buttons to code blocks
+            bubble.querySelectorAll('pre').forEach(pre => {
+                const code = pre.querySelector('code');
+                const lang = code?.className?.replace('language-', '') || 'python';
+
+                const header = document.createElement('div');
+                header.className = 'code-header';
+                header.innerHTML = `
+                    <span>${lang}</span>
+                    <button class="copy-btn" onclick="copyCode(this)">📋 Copy</button>
+                `;
+                pre.insertBefore(header, pre.firstChild);
+                hljs.highlightElement(code);
+            });
+        } else {
+            bubble.textContent = content;
+        }
+
+        msgDiv.appendChild(avatar);
+        msgDiv.appendChild(bubble);
+        chatArea.appendChild(msgDiv);
+        chatArea.scrollTop = chatArea.scrollHeight;
+    }
+
+    // ── Render markdown ──
+    function renderMarkdown(text) {
+        return marked.parse(text);
+    }
+
+    // ── Copy code ──
+    function copyCode(btn) {
+        const code = btn.closest('pre').querySelector('code').textContent;
+        navigator.clipboard.writeText(code).then(() => {
+            btn.textContent = '✅ Copied!';
+            setTimeout(() => btn.textContent = '📋 Copy', 2000);
+        });
+    }
+
+    // ── Typing indicator ──
+    function showTyping() {
+        const chatArea = document.getElementById('chat-area');
+        const div = document.createElement('div');
+        div.className = 'message bot';
+        div.id = 'typing';
+        div.innerHTML = `
+            <div class="avatar bot">🐍</div>
+            <div class="bubble">
+                <div class="typing">
+                    <span></span><span></span><span></span>
+                </div>
+            </div>`;
+        chatArea.appendChild(div);
+        chatArea.scrollTop = chatArea.scrollHeight;
+    }
+
+    function hideTyping() {
+        const t = document.getElementById('typing');
+        if (t) t.remove();
+    }
+
+    // ── Send message ──
+    async function sendMessage() {
+        const input = document.getElementById('user-input');
+        const text = input.value.trim();
+        if (!text) return;
+
+        // Add user message
+        addMessage('user', text);
+        messages.push({ role: 'user', content: text });
+
+        // Clear input
+        input.value = '';
+        input.style.height = 'auto';
+
+        // Disable send button
+        const sendBtn = document.getElementById('send-btn');
+        sendBtn.disabled = true;
+
+        // Show typing
+        showTyping();
+
+        try {
+            const res = await fetch('/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ messages })
+            });
+
+            const data = await res.json();
+            hideTyping();
+
+            addMessage('assistant', data.reply);
+            messages.push({ role: 'assistant', content: data.reply });
+
+        } catch (err) {
+            hideTyping();
+            addMessage('assistant', '❌ Something went wrong. Please try again!');
+        }
+
+        sendBtn.disabled = false;
+        input.focus();
+    }
+
+    // ── Clear chat ──
+    function clearChat() {
+        messages = [];
+        const chatArea = document.getElementById('chat-area');
+        chatArea.innerHTML = `
+            <div class="welcome-card">
+                <div class="emoji">🐍</div>
+                <h2>Python Tutor Bot</h2>
+                <p>Your AI-powered Python learning assistant.<br>Ask anything — get instant explanations with code examples!</p>
+                <div class="badge-row">
+                    <span class="badge">Variables</span>
+                    <span class="badge">Loops</span>
+                    <span class="badge">Functions</span>
+                    <span class="badge">OOP</span>
+                    <span class="badge">NumPy</span>
+                    <span class="badge">Pandas</span>
+                    <span class="badge">Recursion</span>
+                    <span class="badge">Interview Prep</span>
+                </div>
+            </div>`;
+    }
+</script>
+</body>
+</html>
