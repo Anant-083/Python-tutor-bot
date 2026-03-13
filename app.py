@@ -52,7 +52,7 @@ def chat():
     reply = response.choices[0].message.content
     return jsonify({"reply": reply})
 
-if __name__ == "__:
+if __name__ == "__main__":
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
 ```
 
